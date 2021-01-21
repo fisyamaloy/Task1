@@ -1,8 +1,0 @@
-﻿  Source.cpp
-C:\Users\User\source\repos\firstTask\Source.cpp(22,4): warning C4101: actionResult: неиспользованная локальная переменная
-C:\Users\User\source\repos\firstTask\Source.cpp(57): message : выполняется компиляция ссылки на экземпляр шаблон функции "T getResultOfAction<T>(const std::pair<short,std::vector<T,std::allocator<T>>> &)"
-          with
-          [
-              T=double
-          ]
-  firstTask.vcxproj -> C:\Users\User\source\repos\firstTask\Debug\firstTask.exe
