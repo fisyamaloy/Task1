@@ -50,8 +50,8 @@ int main() {
 
 		std::vector<std::string> filesPathes = DDI.getFilesVectorFromDirectory(std::regex("(in_)([1-9])([\\d]*)(.dat)"));
 		for (const auto& filePath : filesPathes) {
+			std::mutex mtx;
 			std::thread t([&]() {
-				std::mutex mtx;
 				auto dataPair = DFI.getDataFromFile(filePath);
 				double actionResult = getResultOfAction(dataPair);
 				{
