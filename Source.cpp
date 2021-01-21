@@ -49,8 +49,8 @@ int main() {
 		DataFileOutputter<double> DFO;
 
 		std::vector<std::string> filesPathes = DDI.getFilesVectorFromDirectory(std::regex("(in_)([1-9])([\\d]*)(.dat)"));
+		std::mutex mtx;
 		for (const auto& filePath : filesPathes) {
-			std::mutex mtx;
 			std::thread t([&]() {
 				auto dataPair = DFI.getDataFromFile(filePath);
 				double actionResult = getResultOfAction(dataPair);
