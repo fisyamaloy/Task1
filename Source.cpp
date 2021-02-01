@@ -4,22 +4,20 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <regex>
 #include "AlgebraicAction.h"
 #include "DataFileInputter.h"
 #include "DataDirectoryInputter.h"
 #include "DataFileOutputter.h"
-//#define DEBUG
+#define DEBUG
 
 template<class T>
 static T calculateIt(AlgebraicAction<T>* anyActionPointer, const std::vector<T>& numbers) {
 	std::unique_ptr<AlgebraicAction<T>> actionSmartPointer(anyActionPointer);
-	return actionSmartPointer->getResultOfAlgebraicAction(numbers);
+	return actionSmartPointer->calculate(numbers);
 }
 
 template<class T>
-static T getResultOfAction(const std::pair< short, std::vector<T> >& dataPair) {
-	T actionResult;
+static T doAlgebraicAction(const std::pair< short, std::vector<T> >& dataPair) {
 	switch (dataPair.first) {
 		case 1: {
 			return calculateIt(new Addition<T>, dataPair.second);
@@ -33,6 +31,9 @@ static T getResultOfAction(const std::pair< short, std::vector<T> >& dataPair) {
 	}
 }
 
+
+namespace fs = std::filesystem;
+
 int main() {
 #ifdef DEBUG
 	std::string directoryName = "C:\\Users\\User\\Desktop\\filesd";
@@ -40,24 +41,23 @@ int main() {
 
 	std::string directoryName;
 	std::cin >> directoryName;
-
 #endif // DEBUG
-	
-	std::mutex mtx;
 
+	std::mutex mtx;
+	
 	try {
 		DataDirectoryInputter DDI(directoryName);
 		DataFileInputter<double> DFI;
 		DataFileOutputter<double> DFO;
 
-		std::vector<std::string> filesPathes = DDI.getFilesVectorFromDirectory(std::regex("(in_)([1-9])([\\d]*)(.dat)"));
-		for (const auto& filePath : filesPathes) {
+		std::vector<fs::path> files = DDI.getFilesVector();
+		for (const auto& file : files) {
 			std::thread t([&]() {
-				auto dataPair = DFI.getDataFromFile(filePath);
-				double actionResult = getResultOfAction(dataPair);
+				auto dataPair = DFI.getDataFromFile(file.string());
+				double actionResult = doAlgebraicAction(dataPair);
 				{
 					std::lock_guard<std::mutex> guard(mtx);
-					DFO.outputData(actionResult, "out.dat");
+					DFO.outputData(actionResult);
 				}
 			});
 

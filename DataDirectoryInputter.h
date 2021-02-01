@@ -1,59 +1,48 @@
 #pragma once
-#include <iostream>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <regex>
-#include <io.h>
-#include <Windows.h>
 #include "IDataIOputters.h"
 
 struct DataDirectoryInputter : IDataDirectoryInputter {
-    DataDirectoryInputter(std::string& directoryName) : directoryName(directoryName) {
-        if (!directoryExists()) {
+    DataDirectoryInputter(const fs::path& directory) : directory(directory) {
+        if (!fs::exists(directory) || !fs::is_directory(directory)) {
             throw std::exception("Invalid directory path");
         }
     }
 
-    std::vector<std::string> getFilesVectorFromDirectory(const std::regex& regular) const override {
-        std::vector<std::string> fileNames;
-        _finddata_t info;
-        intptr_t handle = _findfirst((directoryName + "\\*.*").c_str(), &info);
-        if (handle == -1) {
-            return fileNames;
+    std::vector<fs::path> getFilesVector() const noexcept override {
+        std::vector<fs::path> incommingFiles;
+        
+        for (const auto& it : fs::directory_iterator(directory)) {
+            fs::path currentFile = it.path();
+
+            if (currentFile.extension() == ".dat") {
+                std::string fileName = currentFile.filename().replace_extension("").string();
+
+                if (fileNameIsValid(fileName)) {
+                    incommingFiles.push_back(currentFile);
+                }
+            }
         }
 
-        do {
-            if (info.attrib & _A_SUBDIR) {
-                continue;
-            }
-            std::string fullFilePath = directoryName + "\\" + info.name;
-            
-            if (fileNameIsCorrect(info.name, regular)) {
-                fileNames.push_back(fullFilePath);
-            }
-
-        } while (_findnext(handle, &info) == 0);
-
-        _findclose(handle);
-        return fileNames;
+        return incommingFiles;
     }
 
 private:
-    std::string directoryName;
-    
-    bool directoryExists() {
-        DWORD ftyp = GetFileAttributesA(directoryName.c_str());
-        if (ftyp == INVALID_FILE_ATTRIBUTES)
-            return false;
+    fs::path directory;
 
-        if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+    bool fileNameIsValid(const std::string fileName) const noexcept {
+        if (fileName.substr(0, 3) == "in_") {
+            std::string numerical = fileName.substr(3);
+
+            for (const char symb : numerical) {
+                if (!std::isdigit(symb)) {
+                    return false;
+                }
+            }
+
             return true;
+        }
 
         return false;
     }
-
-    bool fileNameIsCorrect(const std::string fileName, const std::regex& regular) const {
-        return std::regex_match(fileName.c_str(), regular);
-    }
 };
+
