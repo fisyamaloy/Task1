@@ -29,6 +29,8 @@ static T doAlgebraicAction(const std::pair< short, std::vector<T> >& dataPair) {
 			return 0;
 		}
 	}
+
+	std::cout << "AC was made" << std::endl;
 }
 
 
